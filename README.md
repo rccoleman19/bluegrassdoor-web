@@ -26,7 +26,7 @@ The help chat sends typed questions to the Supabase Edge Function `chat` (same p
 - Photo first look: Supabase Edge Function `door-photo` (source in `supabase/functions/door-photo/`). Same guardrails as `chat`: one allowed origin, the `chat_fn` database role only (no service key), visitor limits through `chat_rate_take` (4 per 10 minutes, 12 a day), the shared Gemini free-tier budget through `chat_quota_take`. The photo is not stored. If it is unavailable the page says so and the request still goes through.
 - `contractors.html` / `contractors.js`: **Contractor fast lane**. A pasted door schedule becomes builder doors (checked against `builder-rules.js`), a CSV, and a print sheet, then opens the door builder with every opening (`index.html?from=fastlane#build=...`). Lines it can't read are carried into the quote notes.
 - `my-requests.html` / `my-requests.js`: references sent from this browser (localStorage `bgd-my-requests` only).
-- `pro-common.js`, `pro.css`: shared helpers and styles. New tracking events (no personal fields): `service_step`, `photo_look`, `fastlane_parse`, `fastlane_open`, `fastlane_export`, `dory_route`, `myrequests_view`.
+- `pro-common.js`, `pro.css`: shared helpers and styles. New tracking events (no personal fields): `service_step`, `photo_look`, `fastlane_parse`, `fastlane_open`, `fastlane_export`, `dory_route`, `myrequests_view`. These go to PostHog and `window.dataLayer` only; the `site_events` insert policy accepts only the original event names, so they are not written there (add them to that policy to store them too).
 
 ## Visitor tracking
 

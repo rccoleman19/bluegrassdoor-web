@@ -242,6 +242,7 @@
     return out;
   }
 
+  var PAGE_ONLY = { service_step: 1, photo_look: 1, fastlane_parse: 1, fastlane_open: 1, fastlane_export: 1, dory_route: 1, myrequests_view: 1 };
   function ship(name, props, step, clientMs) {
     var body, headers, host;
     if (!netFetch || !step) return;
@@ -253,7 +254,8 @@
       client_ms: clientMs,
       props: props || {}
     });
-    if (cfg.url && cfg.key) {
+    /* the newer events go to PostHog and the page only: the site_events insert policy lists the original event names */
+    if (cfg.url && cfg.key && !PAGE_ONLY[name]) {
       headers = { "Content-Type": "application/json", apikey: cfg.key, Prefer: "return=minimal" };
       netFetch(cfg.url, {
         method: "POST",
