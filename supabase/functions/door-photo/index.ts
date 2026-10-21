@@ -11,6 +11,8 @@ const LOCAL_ORIGIN = /^http:\/\/(localhost|127\.0\.0\.1)(:\d{1,5})?$/;
 const MAX_BODY_BYTES = 1_000_000;
 const LIMITS = { ip_10min: 4, ip_day: 12, session_10min: 4 }; // stricter than chat: photos cost more tokens
 const MODEL = "gemini-3.1-flash-lite";
+const MODEL_2 = "gemini-2.5-flash"; // second Gemini model on the same free-tier key
+const GROQ_VISION = "meta-llama/llama-4-scout-17b-16e-instruct"; // Groq free plan vision model
 const PHONE = "270-780-3235";
 const env = (k: string) => (Deno.env.get(k) || "").trim();
 const DB_URL = env("CHAT_DB_URL");
@@ -85,26 +87,50 @@ Deno.serve(async (req) => {
   const budget = await q(async (s) => (await s`select public.chat_quota_take('gemini', 12, 400, 'America/Los_Angeles') as r`)[0]?.r as boolean);
   if (budget !== true) return json(200, { fallback: true, reason: "busy" }, origin);
 
-  const ctl = new AbortController(); const timer = setTimeout(() => ctl.abort(), 12000);
-  let look: any = null, reason = "";
-  try {
-    const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
-      method: "POST", signal: ctl.signal,
-      headers: { "Content-Type": "application/json", "x-goog-api-key": key },
+  // free-tier chain: Gemini (retry once on 503 / overload, then a second Gemini model), then Groq vision. First good answer wins.
+  const t0 = Date.now(); const tried: string[] = []; let look: any = null, reason = "", used = "";
+  const left = () => 16000 - (Date.now() - t0);
+  async function timed(url: string, init: RequestInit, ms: number) {
+    const ctl = new AbortController(); const tm = setTimeout(() => ctl.abort(), ms);
+    try { return await fetch(url, { ...init, signal: ctl.signal }); } finally { clearTimeout(tm); }
+  }
+  async function gemini(model: string): Promise<any> {
+    const r = await timed(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
+      method: "POST", headers: { "Content-Type": "application/json", "x-goog-api-key": key },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: PROMPT }] },
         contents: [{ role: "user", parts: [{ inline_data: { mime_type: mime, data: image } }, { text: note ? `Visitor's note: ${note}` : "No note." }] }],
-        generationConfig: { maxOutputTokens: 500, responseMimeType: "application/json", responseSchema: SCHEMA, thinkingConfig: { thinkingLevel: "minimal" } },
+        generationConfig: { maxOutputTokens: 500, responseMimeType: "application/json", responseSchema: SCHEMA, ...(model.startsWith("gemini-3") ? { thinkingConfig: { thinkingLevel: "minimal" } } : { thinkingConfig: { thinkingBudget: 0 } }) },
       }),
-    });
-    if (!r.ok) { reason = `http-${r.status}`; console.error("gemini", r.status, (await r.text()).slice(0, 300)); }
-    else {
-      const d = await r.json();
-      const text = (d?.candidates?.[0]?.content?.parts || []).filter((x: any) => !x.thought && typeof x.text === "string").map((x: any) => x.text).join("");
-      try { look = JSON.parse(text); } catch { reason = "parse"; }
-    }
-  } catch (e) { reason = (e as Error).name === "AbortError" ? "timeout" : "network"; }
-  finally { clearTimeout(timer); }
+    }, Math.min(9000, left()));
+    if (!r.ok) { const b = (await r.text()).slice(0, 200); console.error("gemini", model, r.status, b); throw new Error(`${model}:http-${r.status}`); }
+    const d = await r.json();
+    const text = (d?.candidates?.[0]?.content?.parts || []).filter((x: any) => !x.thought && typeof x.text === "string").map((x: any) => x.text).join("");
+    return JSON.parse(text);
+  }
+  async function groq(): Promise<any> {
+    const gk = env("GROQ_API_KEY"); if (!gk) throw new Error("groq:no-key");
+    const ok = await q(async (s) => (await s`select public.chat_quota_take('groq', 3, 75, 'UTC') as r`)[0]?.r as boolean);
+    if (ok !== true) throw new Error("groq:budget");
+    const r = await timed("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${gk}` },
+      body: JSON.stringify({ model: GROQ_VISION, temperature: 0.2, max_tokens: 500, response_format: { type: "json_object" }, messages: [
+        { role: "system", content: PROMPT + "\nReply with ONLY a JSON object with keys: is_door (bool), door_kind, seen, likely_issue, parts (array from: " + PARTS.join(", ") + "), urgent (bool), ask_next, confidence (low|medium|high)." },
+        { role: "user", content: [{ type: "text", text: note ? `Visitor's note: ${note}` : "No note." }, { type: "image_url", image_url: { url: `data:${mime};base64,${image}` } }] }] }),
+    }, Math.min(9000, left()));
+    if (!r.ok) { console.error("groq", r.status, (await r.text()).slice(0, 200)); throw new Error(`groq:http-${r.status}`); }
+    const d = await r.json();
+    return JSON.parse(d?.choices?.[0]?.message?.content || "");
+  }
+  const steps: [string, () => Promise<any>][] = [
+    [MODEL, () => gemini(MODEL)], [MODEL + "-retry", () => new Promise((res) => setTimeout(res, 700)).then(() => gemini(MODEL))],
+    [MODEL_2, () => gemini(MODEL_2)], ["groq", groq],
+  ];
+  for (const [name, run] of steps) {
+    if (left() < 2500) { tried.push(name + ":no-time"); break; }
+    try { look = await run(); used = name; tried.push(name + ":ok"); break; }
+    catch (e) { const m = (e as Error).name === "AbortError" ? name + ":timeout" : (e as Error).message.slice(0, 40); tried.push(m); reason = m; }
+  }
 
   const out = look ? {
     is_door: look.is_door !== false,
@@ -116,8 +142,8 @@ Deno.serve(async (req) => {
     ask_next: clean(look.ask_next, 160),
     confidence: ["low", "medium", "high"].includes(look.confidence) ? look.confidence : "low",
   } : null;
-  const logIt = q((s) => s`select public.chat_log_write(${sid}, ${ip}, ${"[photo] " + mask(note)}, ${out ? mask(out.likely_issue) : null}, ${!out}, ${"gemini:" + MODEL}, ${out ? "photo-ok" : "photo-" + reason})`);
+  const logIt = q((s) => s`select public.chat_log_write(${sid}, ${ip}, ${"[photo] " + mask(note)}, ${out ? mask(out.likely_issue) : null}, ${!out}, ${used || "none"}, ${"photo " + tried.join(" ")})`);
   try { (globalThis as any).EdgeRuntime?.waitUntil?.(logIt); } catch { /* ignore */ }
   if (!out) return json(200, { fallback: true, reason: reason || "unavailable" }, origin);
-  return json(200, { look: out, source: "gemini" }, origin);
+  return json(200, { look: out, source: used.startsWith("groq") ? "groq" : "gemini" }, origin);
 });

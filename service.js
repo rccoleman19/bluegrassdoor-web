@@ -78,7 +78,7 @@
     shrink(f, function (data) {
       if (!data) { noAI("We couldn't open that photo."); return; }
       $("#svc-photo-img").src = data;
-      var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, 15000);
+      var ctl = new AbortController(), timer = setTimeout(function () { ctl.abort(); }, 20000);
       fetch(PHOTO_URL, {
         method: "POST", signal: ctl.signal, headers: { "Content-Type": "application/json", apikey: P.API.key },
         body: JSON.stringify({ image: data.split(",")[1], mime: "image/jpeg", note: picked().map(function (k) { return SYMPTOMS.filter(function (s) { return s[0] === k; })[0][1]; }).join(", ") + ". " + $("#svc-notes").value.slice(0, 200), sessionId: P.session() })
