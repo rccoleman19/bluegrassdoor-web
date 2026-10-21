@@ -1,0 +1,99 @@
+# Bluegrass Commercial Door & More
+
+> Family-owned business at 930 Gordon Avenue, Bowling Green, KY 42101. Doors, frames, hardware, partitions, and flagpoles. Serves Warren County and surrounding jobs. Call 270-780-3235. Email sonya@bluegrassdoor.com.
+
+Plain brief for a bot or answer engine. Same public facts as the website. No prices, hours, ratings, or town list.
+
+Buying and deposits are not available online yet. The completed step is a quote request. The office follows up. Nothing on this website takes a payment.
+
+## Who
+
+- Name: Bluegrass Commercial Door & More
+- Address: 930 Gordon Avenue, Bowling Green, KY 42101
+- Phone: 270-780-3235
+- Email: sonya@bluegrassdoor.com
+- Public website: https://bluegrassdoor.com/
+
+## Services
+
+- Doors
+- Frames
+- Hardware
+- Partitions
+- Flagpoles
+
+Partitions are not in the quote forms. Call or email about partitions.
+
+## Contact our office
+
+- [Call 270-780-3235](tel:+12707803235)
+- [Email sonya@bluegrassdoor.com](mailto:sonya@bluegrassdoor.com)
+- After hours, the homepage can talk with Dory by voice in the browser. That line can answer from the same facts and can send a quote request. A broken or urgent door should call 270-780-3235 now. There is no separate phone number for the voice line.
+
+## Door builder choices
+
+A door quote starts in the door builder. One door uses these choices:
+
+- Door type (`door_type`): `storefront` Storefront / Entrance, `hollow` Hollow Metal / Steel, `fire` Fire-Rated Door, `security` Security / Safe Room, `swing` Interior / Exterior Swing, `barn` Sliding Barn Door.
+- Material (`door_material`): one id offered for that type, or `recommend` (Recommend for me).
+  - storefront: `alglass` Aluminum & glass, `fullglass` All-glass entrance, `recommend`
+  - hollow: `steel` Hollow metal steel, `steellite` Steel with vision lite, `recommend`
+  - fire: `steel` Hollow metal steel, `wood` Wood, `recommend`
+  - security: `steel` Heavy-gauge steel, `steellite` Steel with security glass, `recommend`
+  - swing: `wood` Wood, `steel` Steel, `fiberglass` Fiberglass, `glasslite` Glass panel, `recommend`
+  - barn: `woodpanel` Wood panel, `frosted` Frosted glass, `recommend`
+- Size (`door_size`): `single` Single door, 3' × 7' (36" × 84"), `single8` Single door, 3' × 8' (36" × 96"), `pair` Pair of doors, 6' × 7' (72" × 84"), `custom` plus `door_width` and `door_height` in inches from 12 to 240, or `measure` Not sure.
+- Hardware (`door_hardware`, repeat the field for each choice): at least one, or Recommend for me.
+  - Not a barn door: Lever lockset, Deadbolt, Panic / exit device, Door closer, Keypad / access control, Hinges / pivots, Kick plate & accessories, Recommend for me.
+  - Barn door: Barn track hardware, Door pull / handle, Privacy latch, Soft-close, Recommend for me.
+- A door closer is hardware already listed (controlled self-closing). A regular closer, including on an existing door, is that hardware. An automatic or power operator that opens a door by itself is not listed.
+- `door_quantity`: how many of that same door. Blank means 1. Maximum 500.
+- `door_location`: where it goes. Optional.
+- `name`: required.
+- `phone` or `email`: at least one.
+- `company`, `address` (project address or city), `timeline`, `notes`: optional.
+- `timeline`: As soon as possible, Within 1 month, 1–3 months, or Planning / bidding.
+
+What happens next: the request goes to the office, and the office follows up. It is not an instant purchase.
+
+The homepage door builder can send more than one different door.
+
+## Repair request
+
+- Page: [Fix my door](service.html). Pick what the door is doing, answer the safety check, optionally add a photo for a first look, then **Send my repair request**. It is a request, not a booked visit. Urgent or unsafe: call 270-780-3235.
+
+## Contractor fast lane
+
+- Page: [Contractor fast lane](contractors.html). Paste a door schedule, check the openings, download a CSV or print, then open them in the door builder and send one quote request.
+
+## Door quote
+
+- Human page: [Door builder](index.html#builder). That is the quote path for a door.
+- Open the builder, choose the door, then submit **Send my quote request**. The page script must be running.
+- You get a reference. Buying and deposits are not available online.
+
+## Short quote request
+
+This is not a second main button. It is the short form for someone who would rather not use the builder.
+
+- Page: [Send a quote request](start.html#manual)
+- Fields: `name` (required), `phone` or `email` (at least one), optional `company`, `address`, `timeline`, `notes`.
+- `timeline` uses the same four choices as a door quote.
+- Submit **Send my quote request**. The saved note says the request was sent without the door builder. The office follows up.
+
+## Flagpole quote form
+
+No height, price, or deposit.
+
+- [Request a flagpole quote](start.html#flagpole-form)
+- The same form is on the [flagpoles page](flagpoles.html#quote).
+- Fields: `name` (required), `phone` or `email` (at least one), optional `company`, `address`, `timeline`, `notes`.
+- `timeline` uses the same four choices as a door quote.
+- Submit **Send my flagpole quote**. The saved request says it is a flagpole quote. The office follows up.
+
+## Pages
+
+- [Home](index.html): Company, services, door builder, and contact. The door builder is the door quote.
+- [Flagpoles](flagpoles.html): Flagpole photos and the flagpole quote form.
+- [Send a quote request](start.html#manual): A short quote request, plus the flagpole form. A door quote still starts in the door builder.
+- [Agent brief](llms.txt): This file.

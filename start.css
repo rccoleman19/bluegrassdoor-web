@@ -1,0 +1,16 @@
+/* Short contact path. Uses the site stylesheet; these rules only space this page. */
+.start h1 { font-size: clamp(2.2rem, 8vw, 3.4rem); font-weight: 800; text-transform: uppercase; }
+.start h2 { margin-top: 1.4em; }
+.start-facts { margin: 0; }
+.start-facts div { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); gap: 8px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+.start-facts dt { font-weight: 700; color: var(--ink); }
+.start-facts dd { margin: 0; }
+.start-actions { margin: 8px 0 0; font-weight: 700; }
+.start-callbar { grid-template-columns: 1fr 1fr; }
+.start-note { background: #fff8e6; border: 1px solid #f3d27a; border-radius: 12px; padding: 12px 14px; }
+.start .quote { margin-top: 8px; }
+.start-hw { border: 0; padding: 0; margin: 0 0 14px; display: grid; gap: 8px; }
+.start-hw legend { font-weight: 700; }
+.start-hw label { display: flex; align-items: flex-start; gap: 10px; font-weight: 600; }
+.start-hw input { width: 22px; height: 22px; min-height: 0; margin-top: 2px; flex: none; }
+#door-custom-err.is-on, #door-hw-err.is-on { display: block; }

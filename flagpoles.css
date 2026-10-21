@@ -1,0 +1,8 @@
+/* Flagpoles page. One photo already on the site; the quote uses the same office inbox as a door quote. */
+.fp h1 { font-size: clamp(2.4rem, 8vw, 3.6rem); font-weight: 800; text-transform: uppercase; }
+.fp-photo { margin: 22px 0 0; }
+.fp-photo img { width: 100%; height: auto; border-radius: 14px; }
+.fp-photo figcaption { margin-top: 8px; color: var(--muted); font-size: .92rem; }
+.fp-quote { max-width: 760px; margin: 0 auto; }
+.fp-quote h2 { margin-bottom: 6px; }
+.fp-callbar { grid-template-columns: 1.4fr 1fr; }
