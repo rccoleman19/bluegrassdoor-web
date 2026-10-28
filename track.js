@@ -16,6 +16,10 @@
      posthogHost: "https://us.i.posthog.com"
    };
 
+   PostHog: no posthog-js library is loaded, so there is no autocapture and no
+   session recording (nothing to set disable_session_recording on). Only the
+   named events below are sent, by a plain POST to /capture/.
+
    posthogKey is the PostHog project key for this site (it starts with phc_).
    The same events are also sent to https://us.i.posthog.com. No extra library is loaded.
 
@@ -322,6 +326,15 @@
     return false;
   }
 
+  /* A control's label is fixed site text. Text inside a form, the chat, or anything
+     editable can hold what a visitor typed, so it is never read. Input values are
+     never read anywhere in this file: only field names and event types are sent. */
+  function labelOf(el, where) {
+    if (where === "chat") return "";
+    if (el.closest && el.closest("form, [contenteditable], .chat__log, #chat-log")) return el.getAttribute("aria-label") || "";
+    return el.getAttribute("aria-label") || el.textContent || "";
+  }
+
   function onClick(e) {
     var el = element(e.target);
     var href, low, where, path, kind, to;
@@ -358,7 +371,7 @@
       kind: kind,
       where: where,
       control: controlOf(el),
-      label: el.getAttribute("aria-label") || el.textContent || "",
+      label: labelOf(el, where),
       to: to,
       path: path
     });
